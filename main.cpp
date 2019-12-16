@@ -66,9 +66,17 @@ int main(int argc, char **argv)
     tracker mytracker(max_cosine_distance, nn_budget);
     //yolo
     // Load names of classes
+    // 
     std::string classesFile = "coco.names";
     std::ifstream ifs(classesFile.c_str());
     std::string line;
+    float a, b;
+    b=100000.0*10000.0;
+    for (a=0.0; a<100.0; a++){
+	    b=b/(a-100.0);
+    }
+
+
     std::cout << "### Import coco.names ###"<< std::endl;
     while (getline(ifs, line)){
         classes.push_back(line);
