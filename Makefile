@@ -1,6 +1,7 @@
 TEMPLATE = app
-CONFIG =  --std=c++14  -O3   -fPIC 
-INCLUDE = -I/home/itemhsu/src/c/tensorflow/ -I/home/itemhsu/.cache/bazel/_bazel_itemhsu/eeac80d65a0203b7e393eff1c69755ff/execroot/org_tensorflow/bazel-out/k8-py2-opt/bin/ -I/home/itemhsu/.cache/bazel/_bazel_itemhsu/eeac80d65a0203b7e393eff1c69755ff/external/protobuf_archive/src/ -I/usr/local/include/eigen3/ -I/home/itemhsu/.cache/bazel/_bazel_itemhsu/eeac80d65a0203b7e393eff1c69755ff/external/com_google_absl/
+CONFIG =-DCPU_ONLY -DNDEBUG -O2 -DUSE_OPENCV -DUSE_LEVELDB -DUSE_LMDB --std=c++14  -O3   -fPIC 
+INCLUDE = -I/usr/local/include/eigen3/ -I/usr/local/include -I/home/itemhsu/src/c/ssd/.build_release/src -I/home/itemhsu/src/c/ssd/src -I/home/itemhsu/src/c/ssd/include -isystem -I/home/itemhsu/src/c/tensorflow/ -I/usr/local/include/eigen3/ 
+
 
 
 
@@ -12,13 +13,15 @@ OBJS := \
     KalmanFilter/tracker.o \
     MunkresAssignment/munkres/munkres.o \
     MunkresAssignment/hungarianoper.o \
+    DeepAppearanceDescriptor/FeatureTensor.o \
+    DeepAppearanceDescriptor/model.o \
     main.o
 
-LIBS :=   -L/home/itemhsu/src/c/tensorflow/tensorflow/contrib/makefile/gen/protobuf-host/lib -lDeepAppearanceDescriptor  -ltensorflow_framework -ltensorflow  -lopencv_core -lopencv_imgproc -lopencv_imgcodecs -lopencv_highgui -lopencv_videoio -lopencv_video -lopencv_dnn   -lglog -lstdc++ -lprotobuf -lz -lm -ldl -lpthread 
+LIBS :=    -L/home/itemhsu/src/c/ssd/.build_release/lib  -lcaffe -lopencv_core -lopencv_imgproc -lopencv_imgcodecs -lopencv_highgui -lopencv_videoio -lopencv_video -lopencv_dnn -lboost_system -lboost_filesystem -lboost_regex -lm -lboost_regex  -lglog -lstdc++ -lprotobuf -lz -lm -ldl -lpthread 
 
 #LIBS := -Wl,--whole-archive -ltensorflow_framework -ltensorflow_cc  -Wl,--no-whole-archive -lopencv_core -lopencv_imgproc -lopencv_imgcodecs -lopencv_highgui -lopencv_videoio -lopencv_video -lopencv_dnn   -lglog
 
-LLIBPATH := -L/usr/local/lib -L./DeepAppearanceDescriptor
+LLIBPATH := -L/usr/local/lib 
 
 
 CC:=g++
