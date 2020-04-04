@@ -155,6 +155,7 @@ int main(int argc, char **argv)
     // Process frames.
     while (waitKey(1) < 0) {
         // get frame from the video
+        cout << "### main 154: while loop ###" << endl;
         cap >> frame;
 
         cout << "### main 156: while loop ###" << endl;
@@ -197,14 +198,16 @@ int main(int argc, char **argv)
             detections);
 
 
-        cout << "### main 189: before FeatureTensor ###"
+        cout << "### main 187: before FeatureTensor ###"
             << endl;
         if (tfIns) {
             cout << "### main 188 ###" << endl;
             cout << "Tensorflow get feature succeed!"
                 << endl;
             mytracker.predict();
+            cout << "### main 189 ###" << endl;
             mytracker.update(detections);
+            cout << "### main 190 ###" << endl;
             vector < RESULT_DATA > result;
           for (Track & track:mytracker.tracks) {
                 cout << "### main 196 ###" << endl;
@@ -250,10 +253,12 @@ int main(int argc, char **argv)
         // Put efficiency information. The function getPerfProfile returns the overall time for inference(t) and the timings for each of the layers(in layersTimes)
         vector < double >layersTimes;
         double freq = getTickFrequency() / 1000;
+        cout << "### main 238 ###" << endl;
         double t = net.getPerfProfile(layersTimes) / freq;
         string label =
             format
             ("Inference time for a frame : %.2f ms", t);
+        cout << "### main 239 ###" << endl;
         putText(frame, label, Point(0, 15),
             FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 0, 255));
 
@@ -261,21 +266,28 @@ int main(int argc, char **argv)
         // Write the frame with the detection boxes
         Mat detectedFrame;
         frame.convertTo(detectedFrame, CV_8U);
-        if (parser.has("image"))
+        cout << "### main 260 ###" << endl;
+        if (parser.has("image")){
+            cout << "### main 261 ###" << endl;
             imwrite(outputFile, detectedFrame);
-        else
-            video.write(detectedFrame);
+        }
+        else{
+            cout << "### main 261 ###" << endl;
+            //video.write(detectedFrame);//matthew debug
+        }
+        cout << "### main 268 ###" << endl;
 
         imshow(kWinName, frame);
+        cout << "### main 271 ###" << endl;
 
     }
 
-    cout << "### main 263 ###" << endl;
+    cout << "### main 283 ###" << endl;
     cap.release();
     if (!parser.has("image"))
         video.release();
 
-    cout << "### main 268 ###" << endl;
+    cout << "### main 288 ###" << endl;
     return 0;
 }
 

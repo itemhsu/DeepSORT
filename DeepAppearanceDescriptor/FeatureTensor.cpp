@@ -9,6 +9,9 @@
 #include <utility>
 #include <vector>
 #include "classification.h"
+using namespace std;
+using namespace cv;
+
 Classifier *Classifier::instance = NULL;
 
 Classifier *Classifier::getInstance()
@@ -41,14 +44,13 @@ Classifier::Classifier(const string & model_file,
     CHECK(num_channels_ == 3 || num_channels_ == 1)
         << "Input layer should have 1 or 3 channels.";
     input_geometry_ =
-        cv::Size(input_layer->width(),
-        input_layer->height());
+        Size(input_layer->width(), input_layer->height());
 
     /* Load labels. */
-    //std::ifstream labels(label_file.c_str());
+    //ifstream labels(label_file.c_str());
     //CHECK(labels) << "Unable to open labels file " << label_file;
     //string line;
-    //while (std::getline(labels, line))
+    //while (getline(labels, line))
     //  labels_.push_back(string(line));
 
     //Blob<float>* output_layer = net_->output_blobs()[0];
@@ -70,52 +72,58 @@ int Classifier::l2morm256(float in[256], float out[256])
     return 0;
 }
 
-/* Return the top N predictions. */
-std::vector <
-    float >Classifier::Classify(const cv::Mat & img, int N)
-{
-    std::vector < float >rawFeature = Predict(img);
-    //std::vector<float> L2Feature[256];
-    std::vector < float >L2Feature;
-    float _in[256], _out[256];
-    for (int i = 0; i < 256; i++) {
-        std::cout << i << " in : " << rawFeature[i] << "\n";
-        _in[i] = rawFeature[i];
-    }
-    l2morm256(_in, _out);
-    L2Feature.insert(L2Feature.end(), _out, _out + 256);
-    for (int i = 0; i < 256; i++) {
-        //L2Feature.insert(L2Feature.end(), _out[i], _out[i]);
-        //begin[i]=begin[i]/sqrt_sum_of_square; 
-        std::cout << i << " out : " << _out[i] << "\n";
-    }
 
-    return L2Feature;
-}
 
-bool Classifier::getRectsFeature(const cv::Mat & img,
+bool Classifier::getRectsFeature(const Mat & img,
     DETECTIONS & d)
 {
-    std::vector < cv::Mat > mats;
+    cout << "getRectsFeature:80 Detections size:" << d.
+        size() << endl;
   for (DETECTION_ROW & dbox:d) {
-        cv::Rect rc =
-            cv::Rect(int (dbox.tlwh(0)), int (dbox.tlwh(1)),
+        cout << "getRectsFeature 81 \n";
+        Rect rc =
+            Rect(int (dbox.tlwh(0)), int (dbox.tlwh(1)),
             int (dbox.tlwh(2)), int (dbox.tlwh(3)));
         rc.x -= (rc.height * 0.5 - rc.width) * 0.5;
         rc.width = rc.height * 0.5;
         rc.x = (rc.x >= 0 ? rc.x : 0);
         rc.y = (rc.y >= 0 ? rc.y : 0);
+        cout << "getRectsFeature 89 \n";
         rc.width =
             (rc.x + rc.width <=
             img.cols ? rc.width : (img.cols - rc.x));
         rc.height =
             (rc.y + rc.height <=
             img.rows ? rc.height : (img.rows - rc.y));
-        cv::Mat mattmp = img(rc).clone();
-        cv::resize(mattmp, mattmp, cv::Size(64, 128));
-        std::vector < float >features = Predict(mattmp);
-        for (int j = 0; j < 256; j++) {
-            dbox.feature[j] = features[j];
+        cout << "getRectsFeature 96 rc.width=" << rc.
+            width << ", rc.height=" << rc.height << "\n";
+        Mat mattmp = img(rc).clone();
+        if (mattmp.empty()) {
+            cout << "%%%%%%%%%%%%%%%% mattmp.empty \n";
+            for (int j = 0; j < 256; j++) {
+                //cout <<  j << ", ";
+                dbox.feature[j] = 0.0;
+            }
+        } else {
+
+            cout << "getRectsFeature 102 \n";
+            resize(mattmp, mattmp, Size(64, 128));
+
+            vector < float >features = Predict(mattmp);
+
+            cout << "features.size=" << features.size() <<
+                "\n";
+            float x;
+
+            for (int j = 0; j < 256; j++) {
+                //cout <<  j << ", ";
+                x = features[j];
+                //cout <<  x << ", ";
+
+                dbox.feature[j] = x;
+            }
+            cout << "\n ";
+
         }
 
         //mats.push_back(mattmp);
@@ -124,48 +132,47 @@ bool Classifier::getRectsFeature(const cv::Mat & img,
     return true;
 }
 
-std::vector <
-    float >Classifier::Predict(const cv::Mat & img)
+vector < float >Classifier::Predict(const Mat & img)
 {
     Blob < float >*input_layer = net_->input_blobs()[0];
-    std::cout << "num_channels_," << num_channels_ << "\n";
-    std::
-        cout << "input_geometry_.height," <<
+    cout << "num_channels_," << num_channels_ << "\n";
+
+    cout << "input_geometry_.height," <<
         input_geometry_.height << "\n";
-    std::
-        cout << "input_geometry_.width," << input_geometry_.
-        width << "\n";
+
+    cout << "input_geometry_.width," <<
+        input_geometry_.width << "\n";
     input_layer->Reshape(1, num_channels_,
         input_geometry_.height, input_geometry_.width);
     /* Forward dimension change to all layers. */
     net_->Reshape();
 
-    std::vector < cv::Mat > input_channels;
+    vector < Mat > input_channels;
     WrapInputLayer(&input_channels);
 
     Preprocess(img, &input_channels);
 
     net_->Forward();
 
-    /* Copy the output layer to a std::vector */
+    /* Copy the output layer to a vector */
     Blob < float >*output_layer = net_->output_blobs()[0];
     //for (int i=0; i<256 ;i++){
-    //  std::cout << output_layer <<"\n";
+    //  cout << output_layer <<"\n";
     //}
     const float *begin = output_layer->cpu_data();
-    std::
-        cout << "output_layer->channels() = " <<
+
+    cout << "output_layer->channels() = " <<
         output_layer->channels() << "\n";
     const float *end = begin + output_layer->channels();
-    return std::vector < float >(begin, end);
+    return vector < float >(begin, end);
 }
 
-/* Wrap the input layer of the network in separate cv::Mat objects
+/* Wrap the input layer of the network in separate Mat objects
  * (one per channel). This way we save one memcpy operation and we
  * don't need to rely on cudaMemcpy2D. The last preprocessing
  * operation will write the separate channels directly to the input
  * layer. */
-void Classifier::WrapInputLayer(std::vector < cv::Mat >
+void Classifier::WrapInputLayer(vector < Mat >
     *input_channels)
 {
     Blob < float >*input_layer = net_->input_blobs()[0];
@@ -174,51 +181,47 @@ void Classifier::WrapInputLayer(std::vector < cv::Mat >
     int height = input_layer->height();
     float *input_data = input_layer->mutable_cpu_data();
     for (int i = 0; i < input_layer->channels(); ++i) {
-        cv::Mat channel(height, width, CV_32FC1,
-            input_data);
+        Mat channel(height, width, CV_32FC1, input_data);
         input_channels->push_back(channel);
         input_data += width * height;
     }
 }
 
-void Classifier::Preprocess(const cv::Mat & img,
-    std::vector < cv::Mat > *input_channels)
+void Classifier::Preprocess(const Mat & img,
+    vector < Mat > *input_channels)
 {
     /* Convert the input image to the input image format of the network. */
-    cv::Mat sample;
-    std::cout << "151\n";
-    std::cout << "img.channels()= " << img.
-        channels() << " \n";
-    std::
-        cout << "num_channels_= " << num_channels_ << " \n";
+    Mat sample;
+    cout << "151\n";
+    cout << "img.channels()= " << img.channels() << " \n";
+
+    cout << "num_channels_= " << num_channels_ << " \n";
     if (img.channels() == 4 && num_channels_ == 3) {
-        std::cout << "154\n";
-        cv::cvtColor(img, sample, cv::COLOR_BGRA2BGR);
+        cout << "154\n";
+        cvtColor(img, sample, COLOR_BGRA2BGR);
     } else
         sample = img;
 
-    std::cout << "159\n";
-    cv::Mat sample_resized;
+    cout << "159\n";
+    Mat sample_resized;
     if (sample.size() != input_geometry_) {
-        std::cout << "162\n";
-        cv::resize(sample, sample_resized, input_geometry_);
+        cout << "162\n";
+        resize(sample, sample_resized, input_geometry_);
     } else
         sample_resized = sample;
 
-    std::cout << "167\n";
-    cv::Mat sample_float;
+    cout << "167\n";
+    Mat sample_float;
     sample_resized.convertTo(sample_float, CV_32FC3);
     //float* dstData = sample_float.data;
     float *dstData = sample_float.ptr < float >(0);
-    std::cout << dstData[0] << "\n";
-    std::cout << dstData[1] << "\n";
-    std::cout << dstData[2] << "\n";
-    //std::cout << dstData[64*128] << "\n";
-    //std::cout << dstData[64*128*2] << "\n";
-    //std::cout << dstData[64*128*3] << "\n";
-    std::cout << "171\n";
-    cv::Mat sample_offseted;
-    cv::Mat sample_gained;
+    cout << dstData[0] << "\n";
+    cout << dstData[1] << "\n";
+    cout << dstData[2] << "\n";
+
+    cout << "171\n";
+    Mat sample_offseted;
+    Mat sample_gained;
     /* 
        transform_param {
        mean_value: 0.485
@@ -244,28 +247,26 @@ void Classifier::Preprocess(const cv::Mat & img,
     sR = 1.0 / sR / 255.0;
     sG = 1.0 / sG / 255.0;
     sB = 1.0 / sB / 255.0;
-    std::
-        cout << mR << "," << mG << "," << mB << "," << sR <<
-        "," << sG << "," << sB << "," << "185\n";
-    mean_ =
-        (cv::Mat_ < float >(3, 1) << 0.485, 0.456, 0.406);
-    std::cout << "187\n";
-    std_ =
-        (cv::Mat_ < float >(3, 1) << 0.229, 0.224, 0.225);
-    std::cout << "189\n";
-    //cv::subtract(sample_float, mean_, sample_offseted);
-    std::cout << "191\n";
-    //cv::divide(sample_offseted, std_, sample_gained);
 
-    cv::transform(sample_float, sample_gained,
-        cv::Matx34f(0.0, 0.0, sB, mB,
+    cout << mR << "," << mG << "," << mB << "," << sR <<
+        "," << sG << "," << sB << "," << "185\n";
+    mean_ = (Mat_ < float >(3, 1) << 0.485, 0.456, 0.406);
+    cout << "187\n";
+    std_ = (Mat_ < float >(3, 1) << 0.229, 0.224, 0.225);
+    cout << "189\n";
+    //subtract(sample_float, mean_, sample_offseted);
+    cout << "191\n";
+    //divide(sample_offseted, std_, sample_gained);
+
+    transform(sample_float, sample_gained,
+        Matx34f(0.0, 0.0, sB, mB,
             0.0, sG, 0.0, mG, sR, 0.0, 0.0, mR));
     float *dstData2 = sample_gained.ptr < float >(0);
-    std::cout << dstData2[0] << "\n";
-    std::cout << dstData2[1] << "\n";
-    std::cout << dstData2[2] << "\n";
-    std::cout << "194\n";
-    cv::split(sample_gained, *input_channels);
+    cout << dstData2[0] << "\n";
+    cout << dstData2[1] << "\n";
+    cout << dstData2[2] << "\n";
+    cout << "194\n";
+    split(sample_gained, *input_channels);
 
     CHECK(reinterpret_cast <
         float *>(input_channels->at(0).data)

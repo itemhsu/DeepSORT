@@ -1,5 +1,5 @@
 TEMPLATE = app
-CONFIG =-DCPU_ONLY -DNDEBUG -O2 -DUSE_OPENCV -DUSE_LEVELDB -DUSE_LMDB --std=c++14  -O3   -fPIC 
+CONFIG =-g -DCPU_ONLY -DNDEBUG -O2 -DUSE_OPENCV -DUSE_LEVELDB -DUSE_LMDB --std=c++14  -O3   -fPIC 
 INCLUDE = -I/usr/local/include/eigen3/ -I/usr/local/include -I/home/itemhsu/src/c/ssd/.build_release/src -I/home/itemhsu/src/c/ssd/src -I/home/itemhsu/src/c/ssd/include -isystem -I/home/itemhsu/src/c/tensorflow/ -I/usr/local/include/eigen3/ 
 
 

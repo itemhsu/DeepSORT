@@ -6,11 +6,10 @@
 // * Each rect's data structure.
 // * tlwh: topleft point & (w,h)
 // * confidence: detection confidence.
-// * feature: the rect's 128d feature.
+// * feature: the rect's 256d feature.
 // */
-class DETECTION_ROW
-{
-public:
+class DETECTION_ROW {
+  public:
     DETECTBOX tlwh;
     float confidence;
     FEATURE feature;
@@ -18,8 +17,8 @@ public:
     DETECTBOX to_tlbr() const;
 };
 
-typedef std::vector<DETECTION_ROW> DETECTIONS;
+typedef std::vector < DETECTION_ROW > DETECTIONS;
 
 
 
-#endif // MODEL_H
+#endif                          // MODEL_H

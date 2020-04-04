@@ -6,6 +6,7 @@
 #include "kalmanfilter.h"
 #include "track.h"
 #include "../DeepAppearanceDescriptor/model.h"
+using namespace std;
 
 class NearNeighborDisMetric;
 
