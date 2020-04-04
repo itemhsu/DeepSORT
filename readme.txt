@@ -1,3 +1,16 @@
+############### Caffe support ########
+1. make sure caffee compiled 
+2. modify the caffee path in Makefile
+3. make 
+4. install UVC webcam
+5. ./main
+
+
+ 
+
+
+
+################ Old #############
 1. bazel build //tensorflow:libtensorflow_cc.so
 2. make -C DeepAppearanceDescriptor
 3. make
